@@ -1,0 +1,27 @@
+---
+import { SITE } from "../data/site";
+import { PLANETS } from "../data/planets";
+
+const planets = [PLANETS.production, PLANETS.post];
+---
+
+<section id="choose" class="snap">
+  <div class="choose-head reveal">
+    <p class="step-pill">Paso 1 de 3 — Elige un planeta</p>
+    <p class="kicker">{SITE.chooseKicker}</p>
+    <h2>{SITE.chooseTitle}</h2>
+    <p class="choose-sub">{SITE.chooseSub}</p>
+  </div>
+
+  {/* Etiquetas proyectadas en tiempo real sobre los planetas 3D */}
+  {
+    planets.map((p) => (
+      <button class="planet-tag" id={`tag-${p.id}`} data-planet={p.id}>
+        <span class="pt-ring" aria-hidden="true" />
+        <span class="pt-name">{p.name}</span>
+        <span class="pt-line" />
+        <span class="pt-cta">Entrar en órbita</span>
+      </button>
+    ))
+  }
+</section>

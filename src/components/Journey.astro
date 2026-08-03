@@ -1,0 +1,17 @@
+---
+import { SITE } from "../data/site";
+---
+
+<section id="journey" aria-label="Viaje por el sistema">
+  {
+    SITE.beats.map((b) => (
+      <div class="beat snap">
+        <div class="beat-inner reveal">
+          <p class="beat-idx">{b.k}</p>
+          <h3 set:html={b.title} />
+          <p>{b.text}</p>
+        </div>
+      </div>
+    ))
+  }
+</section>

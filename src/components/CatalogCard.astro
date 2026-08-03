@@ -1,0 +1,107 @@
+---
+/* Tarjeta de catálogo — se renderiza en el servidor (cero JS para pintarla) */
+import { TYPE_LABEL, type ResolvedCatalogItem } from "../data/types";
+
+interface Props {
+  item: ResolvedCatalogItem;
+  hidden?: boolean;
+}
+const { item, hidden = false } = Astro.props;
+
+/* PRNG determinista: la misma portada en cada build */
+function rng(seed: number) {
+  let s = seed * 9301 + 49297;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+const isVideo = item.type === "video" || item.type === "trailer";
+const accentVar = item.planetId === "production" ? "var(--prod)" : "var(--post)";
+const coverBg = item.planetId === "production" ? "#3a1608" : "#0a1a3d";
+
+const r = rng(item.track?.seed ?? item.title.length * 7 + 5);
+const waveBars = isVideo ? [] : Array.from({ length: 21 }, () => 18 + Math.round(r() * 82));
+
+/* Constelación para los casos de estudio */
+const pts = item.type === "case"
+  ? Array.from({ length: 6 }, () => [8 + r() * 84, 12 + r() * 76] as [number, number])
+  : [];
+---
+
+<article
+  class="cat-card"
+  data-planet={item.planetId}
+  data-type={item.type}
+  data-uid={item.uid}
+  data-featured={item.featured ? "1" : "0"}
+  hidden={hidden}
+  tabindex="0"
+  role="button"
+  aria-label={`${item.title} — ${TYPE_LABEL[item.type]}`}
+>
+  <span class="cc-type">{TYPE_LABEL[item.type]}</span>
+
+  {
+    isVideo ? (
+      <div class="cc-media">
+        <img
+          loading="lazy"
+          decoding="async"
+          width="480"
+          height="270"
+          src={`https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`}
+          alt=""
+        />
+        <div class="cc-play"><span>▶</span></div>
+      </div>
+    ) : item.type === "audio" ? (
+      <div class="cc-media" style={`color:${accentVar}`}>
+        <div
+          class="cc-cover"
+          style={`background:radial-gradient(circle at 50% 60%, ${coverBg}, #05060f 75%)`}
+        >
+          <div class="cc-wave">
+            {waveBars.map((h) => <i style={`height:${h}%`} />)}
+          </div>
+        </div>
+        <div class="cc-play"><span>▶</span></div>
+        <div class="cc-progress"><span /></div>
+      </div>
+    ) : (
+      <div class="cc-media" style={`color:${accentVar}`}>
+        <div
+          class="cc-cover"
+          style={`background:radial-gradient(circle at 50% 40%, ${coverBg}, #05060f 80%)`}
+        >
+          <svg viewBox="0 0 100 100" style="width:60%;height:80%" aria-hidden="true">
+            {pts.map((p, i) =>
+              i > 0 ? (
+                <line
+                  x1={pts[i - 1][0]}
+                  y1={pts[i - 1][1]}
+                  x2={p[0]}
+                  y2={p[1]}
+                  stroke="currentColor"
+                  stroke-width="0.4"
+                  opacity="0.35"
+                />
+              ) : null
+            )}
+            {pts.map((p, i) => (
+              <circle cx={p[0]} cy={p[1]} r={1 + (i % 3) * 0.6} fill="currentColor" opacity="0.75" />
+            ))}
+          </svg>
+        </div>
+        <div class="cc-play"><span>✦</span></div>
+      </div>
+    )
+  }
+
+  <div class="cc-body">
+    <h3 class="cc-title">{item.title}</h3>
+    <p class="cc-client">{item.client}{item.year ? ` · ${item.year}` : ""}</p>
+    <p class="cc-service">{item.planetName} — {item.serviceName}</p>
+  </div>
+</article>

@@ -1,0 +1,31 @@
+---
+import { SITE } from "../data/site";
+---
+
+<section id="contacto" class="snap">
+  <div class="contact-wrap reveal">
+    <p class="kicker">Última órbita</p>
+    <h2>{SITE.contactTitle}</h2>
+    <p class="section-sub">{SITE.contactSub}</p>
+    <div class="contact-actions">
+      <a class="btn btn-solid" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+      <a class="btn btn-ghost" href="#choose" data-nav>Volver a los planetas</a>
+    </div>
+    <div class="contact-meta">
+      {
+        SITE.contactMeta.map((m, i) => (
+          <>
+            {i > 0 && <span class="dot">·</span>}
+            <span>{m}</span>
+          </>
+        ))
+      }
+    </div>
+  </div>
+
+  <footer id="site-footer">
+    <span class="foot-brand">{SITE.name}</span>
+    <span class="foot-tag">{SITE.footerTagline}</span>
+    <span class="foot-copy">© 2026 — Todos los sonidos reservados</span>
+  </footer>
+</section>

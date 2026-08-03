@@ -1,0 +1,48 @@
+---
+import { SITE, CATALOG_FILTERS } from "../data/site";
+import { allCatalogItems } from "../data/planets";
+import CatalogCard from "./CatalogCard.astro";
+
+/* Las 48 fichas se pre-renderizan en build: el filtrado solo alterna
+   visibilidad, sin construir DOM en el cliente. Las destacadas salen
+   visibles y el resto espera al botón de expandir. */
+const items = allCatalogItems();
+const featured = items.filter((i) => i.featured);
+const rest = items.filter((i) => !i.featured);
+---
+
+<section id="catalogo" class="free">
+  <div class="section-head reveal">
+    <p class="kicker">Transmisiones recientes</p>
+    <h2>{SITE.catalogTitle}</h2>
+    <p class="section-sub">{SITE.catalogSub}</p>
+  </div>
+
+  <div class="catalog-filters" id="catalog-filters" role="toolbar" aria-label="Filtrar catálogo">
+    {
+      CATALOG_FILTERS.map((f) => (
+        <button
+          class:list={["chip", f.extra, f.key === "all" && "active"]}
+          data-filter={f.key}
+        >
+          {f.label}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="catalog-grid" id="catalog-grid">
+    {featured.map((item) => <CatalogCard item={item} />)}
+    {rest.map((item) => <CatalogCard item={item} hidden />)}
+  </div>
+
+  <p class="catalog-empty" id="catalog-empty" hidden>Sin transmisiones en esta órbita</p>
+
+  <div class="catalog-more">
+    <button class="btn btn-ghost btn-wide" id="catalog-expand">
+      <span class="btn-orbit" aria-hidden="true"></span>
+      Expandir catálogo completo
+    </button>
+    <span class="note" id="catalog-note" hidden>{SITE.catalogNote}</span>
+  </div>
+</section>

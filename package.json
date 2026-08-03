@@ -1,0 +1,27 @@
+{
+  "name": "urnepton",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "URNEPTON — sistema sonoro 3D: disquera y estudio de postproducción de audio",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.1.1",
+    "@fontsource-variable/fraunces": "^5.1.1",
+    "@fontsource/ibm-plex-mono": "^5.1.1",
+    "astro": "^5.1.1",
+    "gsap": "^3.12.5",
+    "three": "^0.160.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@types/three": "^0.160.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,39 @@
+---
+import Base from "../layouts/Base.astro";
+import Intro from "../components/Intro.astro";
+import Header from "../components/Header.astro";
+import SideRail from "../components/SideRail.astro";
+import Hero from "../components/Hero.astro";
+import Journey from "../components/Journey.astro";
+import Choose from "../components/Choose.astro";
+import Catalog from "../components/Catalog.astro";
+import Manifesto from "../components/Manifesto.astro";
+import Contact from "../components/Contact.astro";
+import OrbitUI from "../components/OrbitUI.astro";
+import ProjectModal from "../components/ProjectModal.astro";
+---
+
+<Base>
+  <canvas id="cosmos"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <Intro />
+  <Header />
+  <SideRail />
+
+  <main id="scroll-root">
+    <Hero />
+    <Journey />
+    <Choose />
+    <Catalog />
+    <Manifesto />
+    <Contact />
+  </main>
+
+  <OrbitUI />
+  <ProjectModal />
+</Base>
+
+<script>
+  import "../scripts/main";
+</script>

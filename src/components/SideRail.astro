@@ -1,0 +1,22 @@
+---
+/* Riel de progreso: siempre indica en qué sección estás */
+const SECTIONS = [
+  { id: "hero", label: "Inicio" },
+  { id: "journey", label: "El viaje" },
+  { id: "choose", label: "Planetas" },
+  { id: "catalogo", label: "Catálogo" },
+  { id: "manifiesto", label: "Manifiesto" },
+  { id: "contacto", label: "Contacto" },
+];
+---
+
+<nav id="side-rail" aria-label="Secciones del sitio">
+  {
+    SECTIONS.map((s) => (
+      <a href={`#${s.id}`} data-rail={s.id}>
+        <i></i>
+        <span>{s.label}</span>
+      </a>
+    ))
+  }
+</nav>

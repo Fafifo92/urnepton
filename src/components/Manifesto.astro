@@ -1,0 +1,11 @@
+---
+import { SITE } from "../data/site";
+---
+
+<section id="manifiesto" class="snap snap-center">
+  <div class="manifest reveal">
+    <p class="kicker">Manifiesto</p>
+    <blockquote set:html={SITE.manifest} />
+    <p class="manifest-sign">— {SITE.name}</p>
+  </div>
+</section>

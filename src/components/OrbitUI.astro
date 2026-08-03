@@ -1,0 +1,50 @@
+---
+/* Overlay del modo órbita: migas de pan, pasos, chips de lunas y
+   panel de servicio. El contenido variable lo rellena main.ts. */
+---
+
+<div id="orbit-ui" hidden>
+  <div class="orbit-nav-cluster">
+    <nav class="orbit-crumbs" aria-label="Ruta de navegación">
+      <button id="crumb-system">Sistema</button>
+      <span class="crumb-sep" aria-hidden="true">›</span>
+      <button id="crumb-planet" aria-current="location"></button>
+      <span class="crumb-sep" id="crumb-moon-sep" aria-hidden="true" hidden>›</span>
+      <button id="crumb-moon" hidden aria-current="location"></button>
+    </nav>
+    <p class="orbit-step" id="orbit-step"></p>
+    <button class="orbit-back btn btn-ghost" id="orbit-back">← Volver</button>
+  </div>
+
+  <div class="orbit-head">
+    <p class="kicker" id="orbit-kicker"></p>
+    <h2 id="orbit-name"></h2>
+    <p id="orbit-desc"></p>
+  </div>
+
+  <nav class="moon-nav" id="moon-nav" aria-label="Lunas del planeta"></nav>
+
+  <aside class="service-panel" id="service-panel" hidden>
+    <button class="panel-close" id="service-close" aria-label="Cerrar servicio">×</button>
+    <div class="sp-nav">
+      <button id="sp-prev" aria-label="Luna anterior">‹</button>
+      <span id="sp-count"></span>
+      <button id="sp-next" aria-label="Luna siguiente">›</button>
+    </div>
+    <p class="kicker sp-kicker" id="sp-kicker"></p>
+    <h3 id="sp-name"></h3>
+    <p class="sp-tagline" id="sp-tagline"></p>
+    <p class="sp-desc" id="sp-desc"></p>
+    <div class="sp-deliv" id="sp-deliv"></div>
+    <h4 class="sp-cat-title">Bitácora de proyectos</h4>
+    <div class="sp-catalog" id="sp-catalog"></div>
+  </aside>
+
+  <p class="orbit-hint" id="orbit-hint">Toca una luna para explorar su servicio</p>
+</div>
+
+<!-- Tooltip flotante al pasar sobre una luna -->
+<div id="moon-tip" hidden aria-hidden="true">
+  <span class="mt-idx"></span>
+  <span class="mt-name"></span>
+</div>

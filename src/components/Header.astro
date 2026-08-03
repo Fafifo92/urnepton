@@ -1,0 +1,25 @@
+---
+import { SITE } from "../data/site";
+
+const NAV = [
+  { href: "#journey", label: "Sistema" },
+  { href: "#choose", label: "Planetas" },
+  { href: "#catalogo", label: "Catálogo" },
+  { href: "#manifiesto", label: "Manifiesto" },
+  { href: "#contacto", label: "Contacto" },
+];
+---
+
+<header id="site-header">
+  <a class="brand" href="#hero" data-nav>
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">{SITE.name}</span>
+  </a>
+  <nav aria-label="Navegación principal">
+    {NAV.map((item) => <a href={item.href} data-nav>{item.label}</a>)}
+  </nav>
+  <button id="audio-toggle" aria-pressed="false" title="Sonido ambiente">
+    <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="audio-label">Sonido</span>
+  </button>
+</header>
