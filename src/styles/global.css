@@ -34,6 +34,10 @@ html {
   background: var(--bg);
   /* Encuadre por sección del storytelling (ver .free-scroll para el catálogo) */
   scroll-snap-type: y mandatory;
+  /* Red de seguridad: si algo se saliera de ancho, el navegador móvil
+     expandiría el viewport y alejaría el zoom (se vería todo pequeño
+     e incompleto). Con clip eso no puede ocurrir. */
+  overflow-x: clip;
 }
 /* Dentro del catálogo el scroll es totalmente libre */
 html.free-scroll { scroll-snap-type: none; }
@@ -301,6 +305,7 @@ main { position: relative; z-index: 5; }
   height: 100vh;
   height: 100svh;
   position: relative;
+  overflow-x: clip;
 }
 .snap-center { display: grid; place-items: center; text-align: center; padding: calc(var(--header-h) + 2rem) clamp(1.2rem, 6vw, 4rem) 3rem; }
 /* El catálogo respira libre. Al ser un área de snap MÁS ALTA que la
@@ -314,12 +319,18 @@ main { position: relative; z-index: 5; }
 }
 
 /* Hero */
-.hero-content { position: relative; }
-/* El halo se sale del texto a propósito; el clip del body evita que
-   ese exceso genere scroll horizontal en pantallas angostas. */
-.hero-content::before {
-  content: ""; position: absolute; inset: -14% -20%; z-index: -1;
-  background: radial-gradient(closest-side, rgba(4, 6, 15, 0.8), rgba(4, 6, 15, 0.4) 58%, transparent);
+/* El velo que hace legible el hero va como fondo con padding propio.
+   Antes era un ::before con inset negativo y se salía de la caja: en
+   móvil eso ensancha el documento y el navegador aleja el zoom. */
+.hero-content {
+  position: relative;
+  padding: 2.6rem 1.6rem 2.2rem;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(4, 6, 15, 0.82),
+    rgba(4, 6, 15, 0.45) 58%,
+    transparent 78%
+  );
 }
 .hero-title {
   font-size: clamp(2.8rem, 10.5vw, 7.4rem);
