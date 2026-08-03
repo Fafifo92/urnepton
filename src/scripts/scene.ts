@@ -506,6 +506,11 @@ export class Cosmos {
   private _nomCam: THREE.Vector3;
   private _shiftTarget: number;
   private _shiftCur: number;
+  private _shiftTargetY = 0;
+  private _shiftCurY = 0;
+  /* Medidas del canvas: son la referencia para render, raycast y proyección */
+  vw = 1;
+  vh = 1;
   private _tmpV!: THREE.Vector3;
   private _tmpV2!: THREE.Vector3;
 
@@ -526,6 +531,9 @@ export class Cosmos {
     this.onHoverChange = null;
     this.elapsed = 0;
 
+    this.vw = canvas.clientWidth || innerWidth;
+    this.vh = canvas.clientHeight || innerHeight;
+
     const dpr = Math.min(window.devicePixelRatio || 1, IS_COARSE ? 1.5 : 2);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -533,14 +541,14 @@ export class Cosmos {
       powerPreference: "high-performance",
     });
     this.renderer.setPixelRatio(dpr);
-    this.renderer.setSize(innerWidth, innerHeight);
+    this.renderer.setSize(this.vw, this.vh, false);
     this.renderer.setClearColor(0x05060f, 1);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(
-      Cosmos.fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.5, 900
+      Cosmos.fovFor(this.vw / this.vh), this.vw / this.vh, 0.5, 900
     );
     this._shiftTarget = 0; // corrimiento horizontal (px) cuando hay panel abierto
     this._shiftCur = 0;
@@ -573,7 +581,10 @@ export class Cosmos {
     this._tmpV = new THREE.Vector3();
     this._tmpV2 = new THREE.Vector3();
 
-    addEventListener("resize", () => this._resize());
+    // Observar el canvas (y no la ventana) mantiene render, raycast y
+    // proyección siempre en la misma referencia, aun con la barra del
+    // navegador móvil apareciendo y desapareciendo.
+    new ResizeObserver(() => this._resize()).observe(canvas);
   }
 
   /* ---------- construcción ---------- */
@@ -699,7 +710,7 @@ export class Cosmos {
     const group = new THREE.Group();
     group.position.copy(position);
 
-    const geo = new THREE.SphereGeometry(1, 64, 48);
+    const geo = new THREE.SphereGeometry(1, IS_COARSE ? 40 : 64, IS_COARSE ? 28 : 48);
     const mat = new THREE.MeshStandardMaterial({
       map: planetTexture(def.theme, id === "production" ? "hot" : "cold"),
       roughness: 0.92,
@@ -718,7 +729,7 @@ export class Cosmos {
 
     let ring = null;
     if (def.hasRing) {
-      const rGeo = new THREE.RingGeometry(radius * 1.45, radius * 2.3, 128, 1);
+      const rGeo = new THREE.RingGeometry(radius * 1.45, radius * 2.3, IS_COARSE ? 72 : 128, 1);
       // Re-mapear UVs para que la textura sea radial
       const uv = rGeo.attributes.uv;
       const pos = rGeo.attributes.position;
@@ -740,7 +751,7 @@ export class Cosmos {
 
     // Lunas
     const moons: MoonHandle[] = [];
-    const moonGeo = new THREE.SphereGeometry(1, 32, 24);
+    const moonGeo = new THREE.SphereGeometry(1, IS_COARSE ? 22 : 32, IS_COARSE ? 16 : 24);
     def.services.forEach((svc, i) => {
       const m = svc.moon;
       // Comprimir el rango de órbitas para que ninguna luna se aleje de cuadro
@@ -871,9 +882,11 @@ export class Cosmos {
     return 55;
   }
 
-  /* Corrimiento del encuadre (px) para dejar sitio a un panel lateral */
-  setPanelShift(px: number) {
+  /* Corrimiento del encuadre (px) para dejar sitio a un panel:
+     x para el lateral de escritorio, y para la hoja inferior móvil. */
+  setPanelShift(px: number, py: number = 0) {
     this._shiftTarget = px;
+    this._shiftTargetY = py;
   }
 
   /* ---------- track de cámara ---------- */
@@ -892,12 +905,21 @@ export class Cosmos {
   };
 
   setTrack(anchors: { p: number; pose: string }[]) {
-    // anchors: [{p: 0..1, pose: 'hero'}, ...] ordenados
-    this.anchors = anchors.map((a) => ({
-      p: a.p,
-      pos: new THREE.Vector3(...Cosmos.POSES[a.pose].p),
-      look: new THREE.Vector3(...Cosmos.POSES[a.pose].l),
-    }));
+    // anchors: [{p: 0..1, pose: 'hero'}, ...] ordenados.
+    // En pantallas verticales la cámara se aleja del objetivo para que el
+    // sistema quepa de lado a lado (el ancho es el lado escaso).
+    const aspect = this.vw / this.vh;
+    const pull = aspect >= 1 ? 1 : aspect < 0.7 ? 1.42 : 1.2;
+    this.anchors = anchors.map((a) => {
+      const pose = Cosmos.POSES[a.pose];
+      const pos = new THREE.Vector3(...pose.p);
+      const look = new THREE.Vector3(...pose.l);
+      if (pull !== 1) {
+        const k = a.pose === "choose" ? pull * 1.15 : pull;
+        pos.sub(look).multiplyScalar(k).add(look);
+      }
+      return { p: a.p, pos, look };
+    });
   }
 
   setProgress(p: number) {
@@ -924,9 +946,10 @@ export class Cosmos {
   /* ---------- interacción ---------- */
 
   setPointer(clientX: number, clientY: number) {
+    // El canvas está fijo en (0,0), así que las coords de cliente valen tal cual
     this.pointer.set(
-      (clientX / innerWidth) * 2 - 1,
-      -(clientY / innerHeight) * 2 + 1
+      (clientX / this.vw) * 2 - 1,
+      -(clientY / this.vh) * 2 + 1
     );
     this.parallax.set(this.pointer.x, this.pointer.y);
     this.pointerDirty = true;
@@ -1094,8 +1117,8 @@ export class Cosmos {
     const visible = this._tmpV.z < 1;
     return {
       visible,
-      x: (this._tmpV.x * 0.5 + 0.5) * innerWidth,
-      y: (-this._tmpV.y * 0.5 + 0.5) * innerHeight,
+      x: (this._tmpV.x * 0.5 + 0.5) * this.vw,
+      y: (-this._tmpV.y * 0.5 + 0.5) * this.vh,
     };
   }
 
@@ -1161,7 +1184,7 @@ export class Cosmos {
 
         const halfV = THREE.MathUtils.degToRad(this.camera.fov) / 2;
         const halfH = Math.atan(Math.tan(halfV) * this.camera.aspect);
-        const panelFrac = Math.min(0.4, (this._shiftCur * 2) / Math.max(1, innerWidth));
+        const panelFrac = Math.min(0.4, (this._shiftCur * 2) / Math.max(1, this.vw));
         ry = Math.max(pl.radius * 1.38, Math.min(pl.radius * 2.15, Math.tan(halfV) * R * 0.56 - 1.4));
         rx = Math.max(pl.radius * 1.5, Math.min(pl.radius * 2.75, Math.tan(halfH) * R * (0.63 - panelFrac * 0.5) - 1.4));
         pl.group.updateMatrixWorld(true);
@@ -1270,10 +1293,14 @@ export class Cosmos {
     this.camLight.intensity += ((wantLamp ? 150 : 0) - this.camLight.intensity) * Math.min(1, dt * 3);
     this.camLight.position.copy(this.camera.position);
 
-    // Corrimiento suave del encuadre cuando hay panel lateral abierto
-    this._shiftCur += (this._shiftTarget - this._shiftCur) * Math.min(1, dt * 4);
-    if (Math.abs(this._shiftCur) > 0.5) {
-      this.camera.setViewOffset(innerWidth, innerHeight, this._shiftCur, 0, innerWidth, innerHeight);
+    // Corrimiento suave del encuadre cuando hay un panel abierto
+    const kShift = Math.min(1, dt * 4);
+    this._shiftCur += (this._shiftTarget - this._shiftCur) * kShift;
+    this._shiftCurY += (this._shiftTargetY - this._shiftCurY) * kShift;
+    if (Math.abs(this._shiftCur) > 0.5 || Math.abs(this._shiftCurY) > 0.5) {
+      this.camera.setViewOffset(
+        this.vw, this.vh, this._shiftCur, this._shiftCurY, this.vw, this.vh
+      );
     } else if (this.camera.view && this.camera.view.enabled) {
       this.camera.clearViewOffset();
     }
@@ -1282,10 +1309,15 @@ export class Cosmos {
   }
 
   _resize() {
-    this.camera.aspect = innerWidth / innerHeight;
+    const w = this.canvas.clientWidth || innerWidth;
+    const h = this.canvas.clientHeight || innerHeight;
+    if (w === this.vw && h === this.vh) return;
+    this.vw = w;
+    this.vh = h;
+    this.camera.aspect = w / h;
     this.camera.fov = Cosmos.fovFor(this.camera.aspect);
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, IS_COARSE ? 1.5 : 2));
+    this.renderer.setSize(w, h, false);
   }
 }

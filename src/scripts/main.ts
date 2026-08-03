@@ -19,6 +19,9 @@ import {
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) =>
   document.querySelector(sel) as T;
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* En pantalla angosta la ficha de servicio es una hoja inferior */
+const isCompact = () => matchMedia("(max-width: 860px)").matches;
+const isSheet = () => isCompact() && matchMedia("(orientation: portrait)").matches;
 
 /* ---------- UI que no depende del 3D ---------- */
 
@@ -109,8 +112,9 @@ function frame(now: number) {
     }
     cosmos.update(REDUCED ? Math.min(dt, 0.016) : dt);
 
-    // Etiquetas proyectadas sobre los planetas (coords relativas a la sección)
-    if (chooseActive && !orbitOpen) {
+    // Etiquetas proyectadas sobre los planetas (coords relativas a la sección).
+    // En compacto se usa el selector de tarjetas, no hace falta proyectar.
+    if (chooseActive && !orbitOpen && !isCompact()) {
       const rect = $("#choose").getBoundingClientRect();
       for (const id of ["production", "post"] as PlanetId[]) {
         const pr = cosmos.projectPlanet(id);
@@ -147,10 +151,19 @@ document.addEventListener("visibilitychange", () => {
   else if (cosmos) startLoop();
 });
 
+/* En móvil, mostrar/ocultar la barra del navegador dispara un resize de solo
+   altura: recalcular ahí provoca saltos, así que se ignora. */
 let resizeTimer: ReturnType<typeof setTimeout>;
+let lastW = innerWidth;
 addEventListener("resize", () => {
+  const onlyHeight = innerWidth === lastW;
+  lastW = innerWidth;
+  if (onlyHeight && matchMedia("(pointer: coarse)").matches) return;
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(computeAnchors, 180);
+  resizeTimer = setTimeout(() => {
+    computeAnchors();
+    if (orbitOpen && cosmos) applyPanelShift(!$("#service-panel").hidden);
+  }, 180);
 });
 
 /* ---------- intro ---------- */
@@ -312,9 +325,12 @@ document.addEventListener("click", (ev) => {
   else if (pick.type === "moon" && orbitOpen) focusMoonFlow(pick.id);
 });
 
-/* Etiquetas de planetas (accesibles con teclado) */
+/* Etiquetas proyectadas (escritorio) y tarjetas del selector (móvil) */
 (["production", "post"] as PlanetId[]).forEach((id) => {
   tagEls[id].addEventListener("click", () => enterOrbitFlow(id));
+});
+document.querySelectorAll<HTMLElement>(".planet-card").forEach((card) => {
+  card.addEventListener("click", () => enterOrbitFlow(card.dataset.planet as PlanetId));
 });
 
 /* ---------- modo órbita ---------- */
@@ -362,6 +378,21 @@ function enterOrbitFlow(planetId: PlanetId) {
   cosmos.enterOrbit(planetId);
 }
 
+/* Corre el encuadre para que la luna nunca quede debajo del panel:
+   en escritorio hacia el lado, en móvil hacia arriba. */
+function applyPanelShift(open: boolean) {
+  if (!cosmos) return;
+  if (!open) {
+    cosmos.setPanelShift(0, 0);
+  } else if (isSheet()) {
+    cosmos.setPanelShift(0, cosmos.vh * 0.3);
+  } else if (isCompact()) {
+    cosmos.setPanelShift(Math.min(420, cosmos.vw * 0.58) / 2, 0);
+  } else {
+    cosmos.setPanelShift(Math.min(460, cosmos.vw * 0.36) / 2, 0);
+  }
+}
+
 function focusMoonFlow(serviceId: string) {
   if (!cosmos) return;
   audio.tick();
@@ -370,15 +401,14 @@ function focusMoonFlow(serviceId: string) {
   updateOrbitCrumbs(serviceId);
   $("#orbit-ui").classList.add("panel-open");
   hideTip();
-  // Correr el encuadre para que la luna no quede debajo del panel
-  cosmos.setPanelShift(innerWidth > 860 ? Math.min(460, innerWidth * 0.36) / 2 : 0);
+  applyPanelShift(true);
 }
 
 /* Un paso atrás: del servicio a las lunas */
 function closePanelFlow() {
   closeServicePanel();
   cosmos?.clearMoonFocus();
-  cosmos?.setPanelShift(0);
+  applyPanelShift(false);
   updateOrbitCrumbs(null);
   $("#orbit-ui").classList.remove("panel-open");
   $<HTMLElement>("#orbit-hint").style.display = "";
@@ -388,20 +418,19 @@ function exitOrbitFlow(after?: () => void) {
   if (!orbitOpen || !cosmos) return;
   closeModal();
   closeServicePanel();
-  cosmos.setPanelShift(0);
+  applyPanelShift(false);
   $("#orbit-ui").classList.remove("panel-open");
   hideTip();
   audio.whoosh(-1);
 
   const ui = $("#orbit-ui");
   ui.classList.remove("shown");
-  setTimeout(() => {
-    if (!orbitOpen) ui.hidden = true;
-  }, 600);
 
   cosmos.exitOrbit(() => {
     orbitOpen = false;
     currentPlanet = null;
+    // Ocultarlo de verdad: si solo baja la opacidad sigue capturando toques
+    ui.hidden = true;
     document.body.dataset.state = "site";
     document.body.style.overflow = "";
     scrollTo(0, savedScrollY);
@@ -437,6 +466,7 @@ $("#moon-nav").addEventListener("click", (ev) => {
 });
 
 $("#service-close").addEventListener("click", closePanelFlow);
+$("#sp-back").addEventListener("click", closePanelFlow);
 
 /* ---------- teclado ---------- */
 

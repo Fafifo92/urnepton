@@ -25,11 +25,15 @@
   <nav class="moon-nav" id="moon-nav" aria-label="Lunas del planeta"></nav>
 
   <aside class="service-panel" id="service-panel" hidden>
-    <button class="panel-close" id="service-close" aria-label="Cerrar servicio">×</button>
-    <div class="sp-nav">
-      <button id="sp-prev" aria-label="Luna anterior">‹</button>
-      <span id="sp-count"></span>
-      <button id="sp-next" aria-label="Luna siguiente">›</button>
+    <span class="sp-grab" aria-hidden="true"></span>
+    <div class="sp-top">
+      <button class="sp-back" id="sp-back">← Lunas</button>
+      <div class="sp-nav">
+        <button id="sp-prev" aria-label="Luna anterior">‹</button>
+        <span id="sp-count"></span>
+        <button id="sp-next" aria-label="Luna siguiente">›</button>
+      </div>
+      <button class="panel-close" id="service-close" aria-label="Cerrar servicio">×</button>
     </div>
     <p class="kicker sp-kicker" id="sp-kicker"></p>
     <h3 id="sp-name"></h3>

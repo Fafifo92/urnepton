@@ -4,6 +4,8 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   // Sitio 100% estático: todo el HTML se pre-renderiza en build
   output: "static",
+  // Respeta el puerto asignado por el entorno (si no, 4321)
+  server: { port: Number(process.env.PORT) || 4321 },
   build: {
     inlineStylesheets: "auto",
   },

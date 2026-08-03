@@ -13,7 +13,7 @@ const planets = [PLANETS.production, PLANETS.post];
     <p class="choose-sub">{SITE.chooseSub}</p>
   </div>
 
-  {/* Etiquetas proyectadas en tiempo real sobre los planetas 3D */}
+  {/* Escritorio: etiquetas proyectadas en tiempo real sobre los planetas 3D */}
   {
     planets.map((p) => (
       <button class="planet-tag" id={`tag-${p.id}`} data-planet={p.id}>
@@ -24,4 +24,22 @@ const planets = [PLANETS.production, PLANETS.post];
       </button>
     ))
   }
+
+  {/* Móvil: tarjetas reales — en pantalla angosta los planetas no caben
+      en cuadro y tocar una esfera diminuta es mala experiencia táctil. */}
+  <div class="planet-picker">
+    {
+      planets.map((p) => (
+        <button class="planet-card" data-planet={p.id}>
+          <span class="pc-orb" style={`--a:${p.accent};--b:${p.accentHot}`} aria-hidden="true" />
+          <span class="pc-text">
+            <span class="pc-role">{p.role}</span>
+            <span class="pc-name">{p.name}</span>
+            <span class="pc-tag">{p.tagline}</span>
+          </span>
+          <span class="pc-go" aria-hidden="true">→</span>
+        </button>
+      ))
+    }
+  </div>
 </section>

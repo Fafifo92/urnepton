@@ -81,6 +81,26 @@ src/
   lateral está abierto — la luna enfocada nunca queda debajo del panel.
 - **Tooltip de lunas**: hover muestra `NN · Servicio`.
 
+## Responsive
+
+El móvil no es el escritorio encogido — cambia la mecánica de interacción:
+
+| | Escritorio | Móvil vertical | Móvil apaisado |
+|---|---|---|---|
+| Elegir planeta | Etiquetas proyectadas sobre el planeta 3D | Tarjetas reales (`.planet-picker`) | Tarjetas en fila |
+| Ficha de servicio | Panel lateral 460px | Hoja inferior 62svh | Hoja lateral 58vw |
+| Volver | Migas + «Volver» | «← Lunas» en la hoja + migas | Ídem, migas limitadas a 46vw |
+| Encuadre | Cámara corrida en X | Cámara corrida en Y | Corrida en X |
+
+En vertical los dos planetas no caben de lado a lado, así que la selección pasa a
+tarjetas táctiles y la hoja deja el planeta y sus lunas siempre a la vista.
+
+Detalles que importan: las secciones usan `svh` (no `dvh`) para que la barra del
+navegador móvil no altere las alturas de encuadre; `body` usa `overflow-x: clip`
+(con `hidden` el body se vuelve su propio contenedor de scroll y rompe el snap);
+y la escena mide render, raycast y proyección contra el **canvas** vía
+`ResizeObserver`, no contra `window`.
+
 ## Reemplazar los mocks por contenido real
 
 Todo vive en `src/data/planets.ts` y `src/data/site.ts`:
